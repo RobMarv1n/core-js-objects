@@ -380,54 +380,41 @@ class Selector {
     });
   }
 
-  element(value) {
-    this.selector += value;
-    this.ifRepeated('element');
-    this.items.push('element');
-    this.order.push(1);
+  addSelector(val, selector, order, ifRepeated = false) {
+    this.selector += val;
+    if (ifRepeated) this.ifRepeated(selector);
+    this.items.push(selector);
+    this.order.push(order);
     this.ifIncorrectOrder();
+  }
+
+  element(value) {
+    this.addSelector(value, 'element', 1, true);
     return this;
   }
 
   id(value) {
-    this.selector += `#${value}`;
-    this.ifRepeated('id');
-    this.items.push('id');
-    this.order.push(2);
-    this.ifIncorrectOrder();
+    this.addSelector(`#${value}`, 'id', 2, true);
     return this;
   }
 
   class(value) {
-    this.selector += `.${value}`;
-    this.items.push('class');
-    this.order.push(3);
-    this.ifIncorrectOrder();
+    this.addSelector(`.${value}`, 'class', 3);
     return this;
   }
 
   attr(value) {
-    this.selector += `[${value}]`;
-    this.items.push('attr');
-    this.order.push(4);
-    this.ifIncorrectOrder();
+    this.addSelector(`[${value}]`, 'attr', 4);
     return this;
   }
 
   pseudoClass(value) {
-    this.selector += `:${value}`;
-    this.items.push('pseudoClass');
-    this.order.push(5);
-    this.ifIncorrectOrder();
+    this.addSelector(`:${value}`, 'pseudoClass', 5);
     return this;
   }
 
   pseudoElement(value) {
-    this.selector += `::${value}`;
-    this.ifRepeated('pseudoElement');
-    this.items.push('pseudoElement');
-    this.order.push(6);
-    this.ifIncorrectOrder();
+    this.addSelector(`::${value}`, 'pseudoElement', 6, true);
     return this;
   }
 
