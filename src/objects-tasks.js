@@ -288,8 +288,15 @@ function sortCitiesArray(arr) {
  *    "Poland" => ["Lodz"]
  *   }
  */
-function group(/* array, keySelector, valueSelector */) {
-  throw new Error('Not implemented');
+function group(array, keySelector, valueSelector) {
+  const keys = array.map(keySelector);
+  const values = array.map(valueSelector);
+  const newArr = array.reduce((acc, obj, index) => {
+    acc[keys[index]] ??= [];
+    acc[keys[index]].push(values[index]);
+    return acc;
+  }, {});
+  return new Map(Object.entries(newArr));
 }
 
 /**
@@ -346,33 +353,121 @@ function group(/* array, keySelector, valueSelector */) {
  *  For more examples see unit tests.
  */
 
+class Selector {
+  constructor(value, el, order) {
+    this.selector = value;
+    this.items = [];
+    this.order = [];
+    this.items.push(el);
+    this.order.push(order);
+  }
+
+  ifRepeated(selector) {
+    if (this.items.includes(selector)) {
+      throw new Error(
+        'Element, id and pseudo-element should not occur more then one time inside the selector'
+      );
+    }
+  }
+
+  ifIncorrectOrder() {
+    this.order.forEach((el, index, arr) => {
+      if (el > arr[index + 1]) {
+        throw new Error(
+          'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element'
+        );
+      }
+    });
+  }
+
+  element(value) {
+    this.selector += value;
+    this.ifRepeated('element');
+    this.items.push('element');
+    this.order.push(1);
+    this.ifIncorrectOrder();
+    return this;
+  }
+
+  id(value) {
+    this.selector += `#${value}`;
+    this.ifRepeated('id');
+    this.items.push('id');
+    this.order.push(2);
+    this.ifIncorrectOrder();
+    return this;
+  }
+
+  class(value) {
+    this.selector += `.${value}`;
+    this.items.push('class');
+    this.order.push(3);
+    this.ifIncorrectOrder();
+    return this;
+  }
+
+  attr(value) {
+    this.selector += `[${value}]`;
+    this.items.push('attr');
+    this.order.push(4);
+    this.ifIncorrectOrder();
+    return this;
+  }
+
+  pseudoClass(value) {
+    this.selector += `:${value}`;
+    this.items.push('pseudoClass');
+    this.order.push(5);
+    this.ifIncorrectOrder();
+    return this;
+  }
+
+  pseudoElement(value) {
+    this.selector += `::${value}`;
+    this.ifRepeated('pseudoElement');
+    this.items.push('pseudoElement');
+    this.order.push(6);
+    this.ifIncorrectOrder();
+    return this;
+  }
+
+  combine(selector1, combinator, selector2) {
+    this.selector = `${selector1.stringify()} ${combinator} ${selector2.stringify()}`;
+    return this;
+  }
+
+  stringify() {
+    return this.selector;
+  }
+}
+
 const cssSelectorBuilder = {
-  element(/* value */) {
-    throw new Error('Not implemented');
+  element(value) {
+    return new Selector(value, 'element', 1);
   },
 
-  id(/* value */) {
-    throw new Error('Not implemented');
+  id(value) {
+    return new Selector(`#${value}`, 'id', 2);
   },
 
-  class(/* value */) {
-    throw new Error('Not implemented');
+  class(value) {
+    return new Selector(`.${value}`, 'class', 3);
   },
 
-  attr(/* value */) {
-    throw new Error('Not implemented');
+  attr(value) {
+    return new Selector(`[${value}]`, 'attr', 4);
   },
 
-  pseudoClass(/* value */) {
-    throw new Error('Not implemented');
+  pseudoClass(value) {
+    return new Selector(`:${value}`, 'pseudoClass', 5);
   },
 
-  pseudoElement(/* value */) {
-    throw new Error('Not implemented');
+  pseudoElement(value) {
+    return new Selector(`::${value}`, 'pseudoElement', 6);
   },
 
-  combine(/* selector1, combinator, selector2 */) {
-    throw new Error('Not implemented');
+  combine(selector1, combinator, selector2) {
+    return new Selector().combine(selector1, combinator, selector2);
   },
 };
 
